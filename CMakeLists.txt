@@ -3,4 +3,4 @@ project(CalculatorGameSolver)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(CalculatorGameSolver main.cpp)
+add_executable(CalculatorGameSolver main.cpp Operation.cpp Operation.h Solver.cpp Solver.h)

@@ -1,6 +1,9 @@
 #include <iostream>
+#include "Solver.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+    Solver s("level.txt");
+    for (Operation* o : s.solve()) {
+        std::cout << o->to_string() << std::endl;
+    }
 }
