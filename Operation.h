@@ -126,5 +126,47 @@ private:
     std::string to_string() override;
 };
 
+class Sum : public Operation {
+public:
+    Sum();
+
+    bool action(int& display) override;
+
+private:
+    std::string to_string() override;
+};
+
+class Cube : public Operation {
+public:
+    Cube();
+
+    bool action(int& display) override;
+
+private:
+    std::string to_string() override;
+};
+
+class Shift : public Operation {
+public:
+    explicit Shift(bool val);
+
+    bool action(int& display) override;
+
+private:
+    bool is_left;
+
+    std::string to_string() override;
+};
+
+class Mirror : public Operation {
+public:
+    Mirror();
+
+    bool action(int& display) override;
+
+private:
+    std::string to_string() override;
+};
+
 
 #endif //CALCULATORGAMESOLVER_OPERATION_H

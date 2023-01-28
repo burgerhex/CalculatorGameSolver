@@ -53,6 +53,14 @@ void Solver::read_file(const std::string& level_file) {
             to_add = std::make_shared<Insert>(std::stoi(line));
         else if (line == "Reverse" || line == "rev")
             to_add = std::make_shared<Reverse>();
+        else if (line == "Sum" || line == "sum")
+            to_add = std::make_shared<Sum>();
+        else if (line == "Cube" || line == "cube" || line == "x^3")
+            to_add = std::make_shared<Cube>();
+        else if ((line.starts_with("Shift") || line.starts_with('s')) && ((line.ends_with('<') || line.ends_with('>'))))
+            to_add = std::make_shared<Shift>(line[line.size() - 1] == '<');
+        else if (line == "Mirror" || line == "mirror" || line == "mir")
+            to_add = std::make_shared<Mirror>();
 
         buttons.push_back(to_add);
     }

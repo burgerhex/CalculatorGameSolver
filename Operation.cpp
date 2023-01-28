@@ -19,7 +19,7 @@ int Operation::safe_to_int(const std::string& str) {
     if (str.size() > int_min_len)
         return INT_MAX;
 
-    long result = std::stol(str);
+    long long result = std::stoll(str);
 
     if (INT_MIN <= result && result <= INT_MAX)
         return (int) result;
@@ -145,4 +145,87 @@ bool PlusMinus::action(int& display) {
 
 std::string PlusMinus::to_string() {
     return "+/-";
+}
+
+Sum::Sum() {}
+
+bool Sum::action(int& display) {
+    int sum = 0;
+    int sign = 1;
+    if (display < 0) {
+        display *= -1;
+        sign = -1;
+    }
+    while (display > 0) {
+        int d = display / 10; // supposedly more efficient to do this first
+        sum += (display % 10);
+        display = d;
+    }
+    display = sign * sum;
+    return true;
+}
+
+std::string Sum::to_string() {
+    return "Sum";
+}
+
+Cube::Cube() {}
+
+bool Cube::action(int& display) {
+    int orig_display = display;
+    display = orig_display * orig_display * orig_display;
+    if ((display / orig_display) / orig_display != orig_display) {
+        display = INT_MAX; // overflow occurred
+    }
+    return true;
+}
+
+std::string Cube::to_string() {
+    return "x^3";
+}
+
+Shift::Shift(bool val) : is_left(val) {}
+
+bool Shift::action(int& display) {
+    int sign = 1;
+    if (display < 0) {
+        display *= -1;
+        sign = -1;
+    }
+    std::string s = std::to_string(display);
+    if (is_left) {
+        char c = s[0];
+        s = s.substr(1) + c;
+    } else {
+        char c = s[s.size() - 1];
+        s = c + s.substr(0, s.size() - 1);
+    }
+    display = sign * safe_to_int(s);
+
+    return true;
+}
+
+std::string Shift::to_string() {
+    std::string s = "Shift ";
+    return s + (is_left? "<" : ">");
+}
+
+Mirror::Mirror() {}
+
+bool Mirror::action(int& display) {
+    int sign = 1;
+    if (display < 0) {
+        display *= -1;
+        sign = -1;
+    }
+    std::string s = std::to_string(display);
+    std::string rev = s;
+    std::reverse(rev.begin(), rev.end());
+    s += rev;
+    display = sign * safe_to_int(s);
+    return true;
+}
+
+std::string Mirror::to_string() {
+    return "Mirror";
 }

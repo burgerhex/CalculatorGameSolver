@@ -103,6 +103,9 @@ private:
 #if DEBUG
         std::string s = button_list_to_string(buttons_pushed);
 #endif
+        if (display == 68921000){
+            std::cout << "";
+        }
         if (button_to_push >= 0) {
             moves_left -= buttons[button_to_push]->action(display);
 #if DEBUG
