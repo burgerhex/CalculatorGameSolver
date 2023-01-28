@@ -13,6 +13,8 @@
 #include <iostream>
 #include "Operation.h"
 
+#define MAX_DISPLAY 999999
+
 class Solver {
 private:
     std::vector<std::shared_ptr<Operation>> buttons;
@@ -103,9 +105,6 @@ private:
 #if DEBUG
         std::string s = button_list_to_string(buttons_pushed);
 #endif
-        if (display == 68921000){
-            std::cout << "";
-        }
         if (button_to_push >= 0) {
             moves_left -= buttons[button_to_push]->action(display);
 #if DEBUG
@@ -115,7 +114,7 @@ private:
 #endif
         }
 
-        if ((moves_left == 0 && display != goal) || display == INT_MAX) {
+        if ((moves_left == 0 && display != goal) || display == INT_MAX || display > MAX_DISPLAY) {
 #if DEBUG
             std::cout << "Out of moves, going up with FALSE.\n";
 #endif
