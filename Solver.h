@@ -10,6 +10,7 @@
 #include <numeric>
 #include <vector>
 #include <memory>
+#include <iostream>
 #include "Operation.h"
 
 class Solver {
@@ -36,7 +37,7 @@ public:
         return buttons_pushed;
     }
 
-    static void solve(const std::string& file_name) {
+    static void solve(const std::string& file_name, bool try_getting_smallest = true) {
         Solver s(file_name);
 
         int move = 0;
@@ -54,17 +55,43 @@ public:
         std::cout << buttons[buttons.size() - 1]->to_string()
                   << "\nAttempting to find solution..." << std::endl;
 
-        std::vector<int> solution = s.get_solution();
+        if (try_getting_smallest) {
+            for (int new_moves = 1; new_moves <= moves; new_moves++) {
+                s.moves = new_moves;
+                std::vector<int> solution = s.get_solution();
 
-        if (solution.empty()) {
+                if (!solution.empty()) {
+                    std::cout << "Solution found!";
+                    int moves_spared = moves - new_moves;
+                    if (moves_spared > 0)
+                        std::cout << " (with " << moves_spared << " move" << ((moves_spared == 1) ? "" : "s")
+                                  << " to spare!)";
+                    std::cout << std::endl;
+
+                    int x = start;
+                    for (int i : solution) {
+                        std::shared_ptr<Operation> o = buttons[i];
+                        o->action(x);
+                        std::cout << "Step " << (++move) << ":\t" << o->to_string() << " --> " << x << std::endl;
+                    }
+                    return;
+                }
+            }
+
             std::cout << "No solution found. :(" << std::endl;
         } else {
-            std::cout << "Solution found!" << std::endl;
-            int x = start;
-            for (int i : solution) {
-                std::shared_ptr<Operation> o = buttons[i];
-                o->action(x);
-                std::cout << "Step " << (++move) << ":\t" << o->to_string() << " --> " << x << std::endl;
+            std::vector<int> solution = s.get_solution();
+
+            if (solution.empty()) {
+                std::cout << "No solution found. :(" << std::endl;
+            } else {
+                std::cout << "Solution found!" << std::endl;
+                int x = start;
+                for (int i : solution) {
+                    std::shared_ptr<Operation> o = buttons[i];
+                    o->action(x);
+                    std::cout << "Step " << (++move) << ":\t" << o->to_string() << " --> " << x << std::endl;
+                }
             }
         }
     }
@@ -73,7 +100,9 @@ private:
     void read_file(const std::string& level_file);
 
     bool solve_helper(std::vector<int>& buttons_pushed, int display, int moves_left, int button_to_push) {
+#if DEBUG
         std::string s = button_list_to_string(buttons_pushed);
+#endif
         if (button_to_push >= 0) {
             moves_left -= buttons[button_to_push]->action(display);
 #if DEBUG
@@ -111,6 +140,7 @@ private:
         return false;
     }
 
+#if DEBUG
     std::string buttons_list_to_string() {
         std::vector<int> all(buttons.size());
         std::iota(all.begin(), all.end(), 0);
@@ -129,6 +159,7 @@ private:
 
         return result + buttons[indices[indices.size() - 1]]->to_string() + "}";
     }
+#endif
 };
 
 

@@ -3,6 +3,7 @@
 //
 
 #include <cmath>
+#include <stdexcept>
 #include "Operation.h"
 
 
@@ -10,6 +11,20 @@ Operation::~Operation() = default;
 
 std::string Operation::to_string() {
     return "<empty operation>";
+}
+
+int Operation::safe_to_int(const std::string& str) {
+    static const int int_min_len = std::to_string(INT_MIN).size();
+
+    if (str.size() > int_min_len)
+        return INT_MAX;
+
+    long result = std::stol(str);
+
+    if (INT_MIN <= result && result <= INT_MAX)
+        return (int) result;
+    else
+        return INT_MAX;
 }
 
 Add::Add(int val) : addVal(val) {}
@@ -73,7 +88,7 @@ std::string Delete::to_string() {
 Insert::Insert(int val) : insVal(val) {}
 
 bool Insert::action(int& display) {
-    display = std::stoi(std::to_string(display) + std::to_string(insVal));
+    display = safe_to_int(std::to_string(display) + std::to_string(insVal));
     return true;
 }
 
@@ -91,10 +106,10 @@ bool Replace::action(int& display) {
     size_t ind = display_str.find(target);
     while (ind != std::string::npos) {
         display_str.replace(ind, target.size(), replacement);
-        ind = display_str.find(target);
+        ind = display_str.find(target, ind + target.size());
     }
 
-    display = std::stoi(display_str);
+    display = safe_to_int(display_str);
 
     return true;
 }
@@ -113,7 +128,7 @@ bool Reverse::action(int& display) {
     }
     std::string s = std::to_string(display);
     std::reverse(s.begin(), s.end());
-    display = sign * std::stoi(s);
+    display = sign * safe_to_int(s);
     return true;
 }
 

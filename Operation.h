@@ -20,6 +20,8 @@ public:
 
 protected:
     Operation() {};
+
+    int safe_to_int(const std::string& str);
 };
 
 class Add : public Operation {
