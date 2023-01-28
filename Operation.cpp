@@ -12,7 +12,7 @@ std::string Operation::to_string() {
     return "<empty operation>";
 }
 
-Add::Add(int val) : addVal(val) { }
+Add::Add(int val) : addVal(val) {}
 
 bool Add::action(int& display) {
     display += addVal;
@@ -23,7 +23,7 @@ std::string Add::to_string() {
     return "+" + std::to_string(addVal);
 }
 
-Subtract::Subtract(int val) : subVal(val) { }
+Subtract::Subtract(int val) : subVal(val) {}
 
 bool Subtract::action(int& display) {
     display -= subVal;
@@ -34,7 +34,7 @@ std::string Subtract::to_string() {
     return "-" + std::to_string(subVal);
 }
 
-Multiply::Multiply(int val) : mulVal(val) { }
+Multiply::Multiply(int val) : mulVal(val) {}
 
 bool Multiply::action(int& display) {
     display *= mulVal;
@@ -45,10 +45,13 @@ std::string Multiply::to_string() {
     return "*" + std::to_string(mulVal);
 }
 
-Divide::Divide(int val) : divVal(val) { }
+Divide::Divide(int val) : divVal(val) {}
 
 bool Divide::action(int& display) {
-    display /= divVal;
+    if (display % divVal == 0)
+        display /= divVal;
+    else
+        display = INT_MAX;
     return true;
 }
 
@@ -67,7 +70,7 @@ std::string Delete::to_string() {
     return "<<";
 }
 
-Insert::Insert(int val) : insVal(val) { }
+Insert::Insert(int val) : insVal(val) {}
 
 bool Insert::action(int& display) {
     display = std::stoi(std::to_string(display) + std::to_string(insVal));
@@ -76,4 +79,55 @@ bool Insert::action(int& display) {
 
 std::string Insert::to_string() {
     return std::to_string(insVal);
+}
+
+Replace::Replace(int val1, int val2) : toReplace(val1), replaceWith(val2) {}
+
+bool Replace::action(int& display) {
+    const std::string& target = std::to_string(toReplace);
+    const std::string& replacement = std::to_string(replaceWith);
+    std::string display_str = std::to_string(display);
+
+    size_t ind = display_str.find(target);
+    while (ind != std::string::npos) {
+        display_str.replace(ind, target.size(), replacement);
+        ind = display_str.find(target);
+    }
+
+    display = std::stoi(display_str);
+
+    return true;
+}
+
+std::string Replace::to_string() {
+    return std::to_string(toReplace) + " => " + std::to_string(replaceWith);
+}
+
+Reverse::Reverse() {}
+
+bool Reverse::action(int& display) {
+    int sign = 1;
+    if (display < 0) {
+        display *= -1;
+        sign = -1;
+    }
+    std::string s = std::to_string(display);
+    std::reverse(s.begin(), s.end());
+    display = sign * std::stoi(s);
+    return true;
+}
+
+std::string Reverse::to_string() {
+    return "Reverse";
+}
+
+PlusMinus::PlusMinus() {}
+
+bool PlusMinus::action(int& display) {
+    display *= -1;
+    return true;
+}
+
+std::string PlusMinus::to_string() {
+    return "+/-";
 }

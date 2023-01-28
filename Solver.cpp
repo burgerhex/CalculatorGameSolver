@@ -30,20 +30,29 @@ void Solver::read_file(const std::string& level_file) {
 
 
     while (std::getline(file, line)) {
-        Operation* to_add = nullptr;
+        std::shared_ptr<Operation> to_add = nullptr;
 
-        if (line.starts_with('+'))
-            to_add = new Add(std::stoi(line.substr(1)));
+        size_t find_replace = line.find("=>");
+
+        if (line == "+/-")
+            to_add = std::make_shared<PlusMinus>();
+        else if (line.starts_with('+'))
+            to_add = std::make_shared<Add>(std::stoi(line.substr(1)));
         else if (line.starts_with('-'))
-            to_add = new Subtract(std::stoi(line.substr(1)));
+            to_add = std::make_shared<Subtract>(std::stoi(line.substr(1)));
         else if (line.starts_with('*'))
-            to_add = new Multiply(std::stoi(line.substr(1)));
+            to_add = std::make_shared<Multiply>(std::stoi(line.substr(1)));
         else if (line.starts_with('/'))
-            to_add = new Divide(std::stoi(line.substr(1)));
+            to_add = std::make_shared<Divide>(std::stoi(line.substr(1)));
         else if (line.starts_with("<<"))
-            to_add = new Delete();
+            to_add = std::make_shared<Delete>();
+        else if (find_replace != std::string::npos)
+            to_add = std::make_shared<Replace>(std::stoi(line.substr(0, find_replace)),
+                                               std::stoi(line.substr(find_replace + 2)));
         else if (is_int(line))
-            to_add = new Insert(std::stoi(line));
+            to_add = std::make_shared<Insert>(std::stoi(line));
+        else if (line == "Reverse" || line == "rev")
+            to_add = std::make_shared<Reverse>();
 
         buttons.push_back(to_add);
     }
