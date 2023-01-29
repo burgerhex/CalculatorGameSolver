@@ -30,7 +30,7 @@ void Solver::read_file(const std::string& level_file) {
 
 
     while (std::getline(file, line)) {
-        std::shared_ptr<Operation> to_add = nullptr;
+        std::shared_ptr<Operation> to_add;
 
         size_t find_replace = line.find("=>");
 
@@ -44,6 +44,12 @@ void Solver::read_file(const std::string& level_file) {
             to_add = std::make_shared<Multiply>(std::stoi(line.substr(1)));
         else if (line.starts_with('/'))
             to_add = std::make_shared<Divide>(std::stoi(line.substr(1)));
+        else if (line.starts_with("[+]"))
+            to_add = std::make_shared<MutatorAdd>(std::stoi(line.substr(3)));
+//        else if (line.starts_with("[-]"))
+//            to_add = std::make_shared<MutatorSubtract>(std::stoi(line.substr(3)));
+//        else if (line.starts_with("[*]"))
+//            to_add = std::make_shared<MutatorMultiply>(std::stoi(line.substr(3)));
         else if (line.starts_with("<<"))
             to_add = std::make_shared<Delete>();
         else if (find_replace != std::string::npos)
@@ -61,6 +67,8 @@ void Solver::read_file(const std::string& level_file) {
             to_add = std::make_shared<Shift>(line[line.size() - 1] == '<');
         else if (line == "Mirror" || line == "mirror" || line == "mir")
             to_add = std::make_shared<Mirror>();
+        else
+            throw std::invalid_argument("unrecognizable op " + line);
 
         buttons.push_back(to_add);
     }

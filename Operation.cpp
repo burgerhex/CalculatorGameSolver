@@ -6,11 +6,16 @@
 #include <stdexcept>
 #include "Operation.h"
 
-
 Operation::~Operation() = default;
 
 std::string Operation::to_string() {
     return "<empty operation>";
+}
+
+MutatorOperation::~MutatorOperation() = default;
+
+std::string MutatorOperation::to_string() {
+    return "<empty mutator>";
 }
 
 int Operation::safe_to_int(const std::string& str) {
@@ -34,8 +39,25 @@ bool Add::action(int& display) {
     return true;
 }
 
+void Add::mutate_by(const MutatorOperation& op, bool unmutate) {
+    op.mutate(addVal, unmutate);
+}
+
 std::string Add::to_string() {
     return "+" + std::to_string(addVal);
+}
+
+MutatorAdd::MutatorAdd(int val) : addVal(val) {}
+
+void MutatorAdd::mutate(int& val, bool unmutate) const {
+    if (unmutate)
+        val -= addVal;
+    else
+        val += addVal;
+}
+
+std::string MutatorAdd::to_string() {
+    return "[+]" + std::to_string(addVal);
 }
 
 Subtract::Subtract(int val) : subVal(val) {}
@@ -43,6 +65,10 @@ Subtract::Subtract(int val) : subVal(val) {}
 bool Subtract::action(int& display) {
     display -= subVal;
     return true;
+}
+
+void Subtract::mutate_by(const MutatorOperation& op, bool unmutate) {
+    op.mutate(subVal, unmutate);
 }
 
 std::string Subtract::to_string() {
@@ -54,6 +80,10 @@ Multiply::Multiply(int val) : mulVal(val) {}
 bool Multiply::action(int& display) {
     display *= mulVal;
     return true;
+}
+
+void Multiply::mutate_by(const MutatorOperation& op, bool unmutate) {
+    op.mutate(mulVal, unmutate);
 }
 
 std::string Multiply::to_string() {
@@ -70,6 +100,10 @@ bool Divide::action(int& display) {
     return true;
 }
 
+void Divide::mutate_by(const MutatorOperation& op, bool unmutate) {
+    op.mutate(divVal, unmutate);
+}
+
 std::string Divide::to_string() {
     return "/" + std::to_string(divVal);
 }
@@ -81,6 +115,8 @@ bool Delete::action(int& display) {
     return true;
 }
 
+void Delete::mutate_by(const MutatorOperation& op, bool unmutate) {}
+
 std::string Delete::to_string() {
     return "<<";
 }
@@ -90,6 +126,10 @@ Insert::Insert(int val) : insVal(val) {}
 bool Insert::action(int& display) {
     display = safe_to_int(std::to_string(display) + std::to_string(insVal));
     return true;
+}
+
+void Insert::mutate_by(const MutatorOperation& op, bool unmutate) {
+    op.mutate(insVal, unmutate);
 }
 
 std::string Insert::to_string() {
@@ -114,6 +154,11 @@ bool Replace::action(int& display) {
     return true;
 }
 
+void Replace::mutate_by(const MutatorOperation& op, bool unmutate) {
+    op.mutate(toReplace, unmutate);
+    op.mutate(replaceWith, unmutate);
+}
+
 std::string Replace::to_string() {
     return std::to_string(toReplace) + " => " + std::to_string(replaceWith);
 }
@@ -132,6 +177,8 @@ bool Reverse::action(int& display) {
     return true;
 }
 
+void Reverse::mutate_by(const MutatorOperation& op, bool unmutate) {}
+
 std::string Reverse::to_string() {
     return "Reverse";
 }
@@ -142,6 +189,8 @@ bool PlusMinus::action(int& display) {
     display *= -1;
     return true;
 }
+
+void PlusMinus::mutate_by(const MutatorOperation& op, bool unmutate) {}
 
 std::string PlusMinus::to_string() {
     return "+/-";
@@ -165,6 +214,8 @@ bool Sum::action(int& display) {
     return true;
 }
 
+void Sum::mutate_by(const MutatorOperation& op, bool unmutate) {}
+
 std::string Sum::to_string() {
     return "Sum";
 }
@@ -179,6 +230,8 @@ bool Cube::action(int& display) {
     }
     return true;
 }
+
+void Cube::mutate_by(const MutatorOperation& op, bool unmutate) {}
 
 std::string Cube::to_string() {
     return "x^3";
@@ -205,6 +258,8 @@ bool Shift::action(int& display) {
     return true;
 }
 
+void Shift::mutate_by(const MutatorOperation& op, bool unmutate) {}
+
 std::string Shift::to_string() {
     std::string s = "Shift ";
     return s + (is_left? "<" : ">");
@@ -225,6 +280,8 @@ bool Mirror::action(int& display) {
     display = sign * safe_to_int(s);
     return true;
 }
+
+void Mirror::mutate_by(const MutatorOperation& op, bool unmutate) {}
 
 std::string Mirror::to_string() {
     return "Mirror";

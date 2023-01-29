@@ -35,14 +35,14 @@ public:
 
     std::vector<int> get_solution() {
         std::vector<int> buttons_pushed;
-        solve_helper(buttons_pushed, start, moves, -1);
+        std::vector<std::shared_ptr<MutatorOperation>> mutators;
+        solve_helper(buttons_pushed, start, moves, -1, mutators);
         return buttons_pushed;
     }
 
     static void solve(const std::string& file_name, bool try_getting_smallest = true) {
         Solver s(file_name);
 
-        int move = 0;
         int start = s.get_start();
         int goal = s.get_goal();
         int moves = s.get_moves();
@@ -70,12 +70,7 @@ public:
                                   << " to spare!)";
                     std::cout << std::endl;
 
-                    int x = start;
-                    for (int i : solution) {
-                        std::shared_ptr<Operation> o = buttons[i];
-                        o->action(x);
-                        std::cout << "Step " << (++move) << ":\t" << o->to_string() << " --> " << x << std::endl;
-                    }
+                    s.print_steps(solution);
                     return;
                 }
             }
@@ -88,12 +83,29 @@ public:
                 std::cout << "No solution found. :(" << std::endl;
             } else {
                 std::cout << "Solution found!" << std::endl;
-                int x = start;
-                for (int i : solution) {
-                    std::shared_ptr<Operation> o = buttons[i];
-                    o->action(x);
-                    std::cout << "Step " << (++move) << ":\t" << o->to_string() << " --> " << x << std::endl;
-                }
+                s.print_steps(solution);
+            }
+        }
+    }
+
+    void print_steps(const std::vector<int>& solution) {
+        int x = start;
+        int move = 0;
+        std::vector<std::shared_ptr<MutatorOperation>> mutations_to_apply;
+        for (int i : solution) {
+            std::shared_ptr<Operation> o = buttons[i];
+            std::shared_ptr<MutatorOperation> mutation;
+            if (o->is_mutator()) {
+                mutation = std::static_pointer_cast<MutatorOperation>(o);
+                mutations_to_apply.push_back(mutation);
+            }
+            for (const std::shared_ptr<MutatorOperation>& m : mutations_to_apply) {
+                o->mutate_by(*m, false);
+            }
+            o->action(x);
+            std::cout << "Step " << (++move) << ":\t" << o->to_string() << " --> " << x << std::endl;
+            for (const std::shared_ptr<MutatorOperation>& m : mutations_to_apply) {
+                o->mutate_by(*m, true);
             }
         }
     }
@@ -101,12 +113,26 @@ public:
 private:
     void read_file(const std::string& level_file);
 
-    bool solve_helper(std::vector<int>& buttons_pushed, int display, int moves_left, int button_to_push) {
+    bool solve_helper(std::vector<int>& buttons_pushed, int display, int moves_left, int button_to_push,
+                      std::vector<std::shared_ptr<MutatorOperation>>& mutators_to_apply) {
 #if DEBUG
         std::string s = button_list_to_string(buttons_pushed);
 #endif
         if (button_to_push >= 0) {
-            moves_left -= buttons[button_to_push]->action(display);
+            std::shared_ptr<Operation> o = buttons[button_to_push];
+            // TODO: apply mutators - give buttons is_mutator. then here (and in print solution,
+            //  go thru buttons_pushed, and if is_mutator, then static_cast to a Mutator parent
+            //  and apply the mutate method on a copy of the button (if can't copy, have mutators
+            //  be able to unmutate)
+            //  OR have another iterating reference vector mutators_pushed and only pop if we
+            //  pushed a mutator
+            for (const std::shared_ptr<MutatorOperation>& m : mutators_to_apply) {
+                o->mutate_by(*m, false);
+            }
+            moves_left -= o->action(display);
+            for (const std::shared_ptr<MutatorOperation>& m : mutators_to_apply) {
+                o->mutate_by(*m, true);
+            }
 #if DEBUG
             std::string indent(moves - moves_left - 1, '\t');
             std::cout << indent << "Trying button " << buttons[button_to_push]->to_string() << " (index "
@@ -132,11 +158,19 @@ private:
 
         for (int i = 0; i < buttons.size(); i++) {
             buttons_pushed.push_back(i);
-            bool result = solve_helper(buttons_pushed, display, moves_left, i);
+            std::shared_ptr<MutatorOperation> m;
+            if (buttons[i]->is_mutator()) {
+                m = static_pointer_cast<MutatorOperation>(buttons[i]);
+                mutators_to_apply.push_back(m);
+            }
+            bool result = solve_helper(buttons_pushed, display, moves_left, i, mutators_to_apply);
             if (result) {
                 return true;
             }
             buttons_pushed.pop_back();
+            if (m) {
+                mutators_to_apply.pop_back();
+            }
         }
 
         return false;
