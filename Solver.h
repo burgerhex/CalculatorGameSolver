@@ -17,8 +17,9 @@ class Solver {
 public:
     std::vector<std::shared_ptr<Operation>> buttons;
     int start, goal, moves;
+    int portal_in, portal_out;
 
-    explicit Solver(const std::string& level_file) : start(0), goal(0), moves(0) {
+    explicit Solver(const std::string& level_file) : start(0), goal(0), moves(0), portal_in(-1), portal_out(-1) {
         read_file(level_file);
     }
 
@@ -43,7 +44,13 @@ public:
                 buttons_to_show.push_back(button);
         }
 
-        std::cout << "Start: " << start << "\nGoal: " << goal << "\nMoves: " << moves << "\nButtons: ";
+        std::cout << "Start: " << start << "\nGoal: " << goal << "\nMoves: " << moves << "\n";
+
+        if (s.portal_in >= 0 && s.portal_out >= 0) {
+            std::cout << "Portal from position " << (s.portal_in + 1) << " to position " << (s.portal_out + 1) << "\n";
+        }
+
+        std::cout << "Buttons: ";
 
         for (int i = 0; i < buttons_to_show.size() - 1; i++) {
             std::cout << buttons_to_show[i]->to_string() << ", ";
@@ -83,29 +90,9 @@ public:
         }
     }
 
-    void print_steps(const std::vector<int>& solution) {
-        int x = start;
-        int move = 0;
-        std::vector<std::shared_ptr<MutatorOperation>> mutations_to_apply;
-        for (int i : solution) {
-            std::shared_ptr<Operation> o = buttons[i];
-            std::shared_ptr<MutatorOperation> mutation;
-            if (o->is_mutator()) {
-                mutation = std::static_pointer_cast<MutatorOperation>(o);
-                mutations_to_apply.push_back(mutation);
-            }
-            for (const std::shared_ptr<MutatorOperation>& m : mutations_to_apply) {
-                o->mutate_by(*m, false);
-            }
-            o->action(x);
-            std::cout << "Step " << (++move) << ":\t" << o->to_string() << " --> " << x << std::endl;
-            for (const std::shared_ptr<MutatorOperation>& m : mutations_to_apply) {
-                o->mutate_by(*m, true);
-            }
-        }
-    }
-
 private:
+    int portal_out_mul, portal_in_mul;
+
     void read_file(const std::string& level_file);
 
     bool solve_helper(std::vector<int>& buttons_pushed, int display, int moves_left, int button_to_push,
@@ -118,20 +105,39 @@ private:
             for (const std::shared_ptr<MutatorOperation>& m : mutators_to_apply) {
                 o->mutate_by(*m, false);
             }
-            moves_left -= o->action(display);
+            o->action(display);
+            moves_left--;
             for (const std::shared_ptr<MutatorOperation>& m : mutators_to_apply) {
                 o->mutate_by(*m, true);
             }
+
 #if DEBUG
             std::string indent(moves - moves_left - 1, '\t');
             std::cout << indent << "Trying button " << buttons[button_to_push]->to_string() << " (index "
                       << button_to_push << "), display is now " << display << ". ";
 #endif
+
+            // apply portal
+            while (portal_in >= 0 && portal_out >= 0 && display >= portal_in_mul) {
+                int ahead = display / portal_in_mul;
+                int remaining = display % portal_in_mul;
+                int stay_in_front = ahead / 10;
+                int to_add_before_mul = ahead % 10;
+                display = stay_in_front * portal_in_mul + remaining + to_add_before_mul * portal_out_mul;
+#if DEBUG
+                std::cout << indent << "Applying portal, display is now " << display << ". ";
+#endif
+            }
         }
 
-        if ((moves_left == 0 && display != goal) || display == INT_MAX || display > MAX_DISPLAY) {
+        if (moves_left == 0 && display != goal) {
 #if DEBUG
             std::cout << "Out of moves, going up with FALSE.\n";
+#endif
+            return false;
+        } else if (display == INT_MAX || display > MAX_DISPLAY) {
+#if DEBUG
+            std::cout << "Invalid result, going up with FALSE.\n";
 #endif
             return false;
         } else if (display == goal) {
@@ -191,6 +197,40 @@ private:
         return result + buttons[indices.back()]->to_string() + "}";
     }
 #endif
+
+    void print_steps(const std::vector<int>& solution) {
+        int x = start;
+        int move = 0;
+        std::vector<std::shared_ptr<MutatorOperation>> mutations_to_apply;
+        for (int i : solution) {
+            std::shared_ptr<Operation> o = buttons[i];
+            std::shared_ptr<MutatorOperation> mutation;
+            if (o->is_mutator()) {
+                mutation = std::static_pointer_cast<MutatorOperation>(o);
+                mutations_to_apply.push_back(mutation);
+            }
+            for (const std::shared_ptr<MutatorOperation>& m : mutations_to_apply) {
+                o->mutate_by(*m, false);
+            }
+            o->action(x);
+            std::cout << "Step " << (++move) << ":\t" << o->to_string() << " --> " << x;
+            for (const std::shared_ptr<MutatorOperation>& m : mutations_to_apply) {
+                o->mutate_by(*m, true);
+            }
+
+            // apply portal
+            while (portal_in >= 0 && portal_out >= 0 && x >= portal_in_mul) {
+                int ahead = x / portal_in_mul;
+                int remaining = x % portal_in_mul;
+                int stay_in_front = ahead / 10;
+                int to_add_before_mul = ahead % 10;
+                x = stay_in_front * portal_in_mul + remaining + to_add_before_mul * portal_out_mul;
+                std::cout << " --> " << x;
+            }
+
+            std::cout << std::endl;
+        }
+    }
 };
 
 

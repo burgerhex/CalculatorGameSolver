@@ -35,9 +35,8 @@ int Operation::safe_to_int(const std::string& str) {
 
 Add::Add(int val) : addVal(val) {}
 
-bool Add::action(int& display) {
+void Add::action(int& display) {
     display += addVal;
-    return true;
 }
 
 void Add::mutate_by(const MutatorOperation& op, bool unmutate) {
@@ -63,9 +62,8 @@ std::string MutatorAdd::to_string() {
 
 Subtract::Subtract(int val) : subVal(val) {}
 
-bool Subtract::action(int& display) {
+void Subtract::action(int& display) {
     display -= subVal;
-    return true;
 }
 
 void Subtract::mutate_by(const MutatorOperation& op, bool unmutate) {
@@ -78,9 +76,8 @@ std::string Subtract::to_string() {
 
 Multiply::Multiply(int val) : mulVal(val) {}
 
-bool Multiply::action(int& display) {
+void Multiply::action(int& display) {
     display *= mulVal;
-    return true;
 }
 
 void Multiply::mutate_by(const MutatorOperation& op, bool unmutate) {
@@ -93,12 +90,11 @@ std::string Multiply::to_string() {
 
 Divide::Divide(int val) : divVal(val) {}
 
-bool Divide::action(int& display) {
+void Divide::action(int& display) {
     if (display % divVal == 0)
         display /= divVal;
     else
         display = INT_MAX;
-    return true;
 }
 
 void Divide::mutate_by(const MutatorOperation& op, bool unmutate) {
@@ -111,9 +107,8 @@ std::string Divide::to_string() {
 
 Delete::Delete() = default;
 
-bool Delete::action(int& display) {
+void Delete::action(int& display) {
     display /= 10;
-    return true;
 }
 
 void Delete::mutate_by(const MutatorOperation& op, bool unmutate) {}
@@ -124,9 +119,8 @@ std::string Delete::to_string() {
 
 Insert::Insert(int val) : insVal(val) {}
 
-bool Insert::action(int& display) {
+void Insert::action(int& display) {
     display = safe_to_int(std::to_string(display) + std::to_string(insVal));
-    return true;
 }
 
 void Insert::mutate_by(const MutatorOperation& op, bool unmutate) {
@@ -139,7 +133,7 @@ std::string Insert::to_string() {
 
 Replace::Replace(int val1, const std::string& val2) : toReplace(val1), replaceWith(val2) {}
 
-bool Replace::action(int& display) {
+void Replace::action(int& display) {
     const std::string& target = std::to_string(toReplace);
     std::string display_str = std::to_string(display);
 
@@ -150,8 +144,6 @@ bool Replace::action(int& display) {
     }
 
     display = safe_to_int(display_str);
-
-    return true;
 }
 
 void Replace::mutate_by(const MutatorOperation& op, bool unmutate) {
@@ -166,7 +158,7 @@ std::string Replace::to_string() {
 
 Reverse::Reverse() {}
 
-bool Reverse::action(int& display) {
+void Reverse::action(int& display) {
     int sign = 1;
     if (display < 0) {
         display *= -1;
@@ -175,7 +167,6 @@ bool Reverse::action(int& display) {
     std::string s = std::to_string(display);
     std::reverse(s.begin(), s.end());
     display = sign * safe_to_int(s);
-    return true;
 }
 
 void Reverse::mutate_by(const MutatorOperation& op, bool unmutate) {}
@@ -186,9 +177,8 @@ std::string Reverse::to_string() {
 
 PlusMinus::PlusMinus() {}
 
-bool PlusMinus::action(int& display) {
+void PlusMinus::action(int& display) {
     display *= -1;
-    return true;
 }
 
 void PlusMinus::mutate_by(const MutatorOperation& op, bool unmutate) {}
@@ -199,7 +189,7 @@ std::string PlusMinus::to_string() {
 
 Sum::Sum() {}
 
-bool Sum::action(int& display) {
+void Sum::action(int& display) {
     int sum = 0;
     int sign = 1;
     if (display < 0) {
@@ -212,7 +202,6 @@ bool Sum::action(int& display) {
         display = d;
     }
     display = sign * sum;
-    return true;
 }
 
 void Sum::mutate_by(const MutatorOperation& op, bool unmutate) {}
@@ -223,13 +212,12 @@ std::string Sum::to_string() {
 
 Cube::Cube() {}
 
-bool Cube::action(int& display) {
+void Cube::action(int& display) {
     int orig_display = display;
     display = orig_display * orig_display * orig_display;
     if ((display / orig_display) / orig_display != orig_display) {
         display = INT_MAX; // overflow occurred
     }
-    return true;
 }
 
 void Cube::mutate_by(const MutatorOperation& op, bool unmutate) {}
@@ -240,7 +228,7 @@ std::string Cube::to_string() {
 
 Shift::Shift(bool val) : is_left(val) {}
 
-bool Shift::action(int& display) {
+void Shift::action(int& display) {
     int sign = 1;
     if (display < 0) {
         display *= -1;
@@ -255,8 +243,6 @@ bool Shift::action(int& display) {
         s = c + s.substr(0, s.size() - 1);
     }
     display = sign * safe_to_int(s);
-
-    return true;
 }
 
 void Shift::mutate_by(const MutatorOperation& op, bool unmutate) {}
@@ -268,7 +254,7 @@ std::string Shift::to_string() {
 
 Mirror::Mirror() {}
 
-bool Mirror::action(int& display) {
+void Mirror::action(int& display) {
     int sign = 1;
     if (display < 0) {
         display *= -1;
@@ -279,7 +265,6 @@ bool Mirror::action(int& display) {
     std::reverse(rev.begin(), rev.end());
     s += rev;
     display = sign * safe_to_int(s);
-    return true;
 }
 
 void Mirror::mutate_by(const MutatorOperation& op, bool unmutate) {}
@@ -306,13 +291,12 @@ void Memory::pop_memory() {
     past_memories.pop_back();
 }
 
-bool Memory::action(int& display) {
+void Memory::action(int& display) {
     if (get_memory() == INT_MAX)
         display = INT_MAX;
     else
         // same as insert
         display = safe_to_int(std::to_string(display) + std::to_string(get_memory()));
-    return true;
 }
 
 void Memory::mutate_by(const MutatorOperation& op, bool unmutate) {
@@ -327,9 +311,8 @@ std::string Memory::to_string() {
 Store::Store(std::shared_ptr<Memory> memory) : Operation(false, false, true),
                                                memory(std::move(memory)) {}
 
-bool Store::action(int& display) {
+void Store::action(int& display) {
     memory->set_memory(display);
-    return true;
 }
 
 void Store::mutate_by(const MutatorOperation& op, bool unmutate) {
@@ -339,4 +322,26 @@ void Store::mutate_by(const MutatorOperation& op, bool unmutate) {
 
 std::string Store::to_string() {
     return "Store";
+}
+
+Inv10::Inv10() {}
+
+void Inv10::action(int& display) {
+    int sign = 1;
+    if (display < 0) {
+        display *= -1;
+        sign = -1;
+    }
+    std::string s = std::to_string(display);
+    for (char& c : s) {
+        if (c != '0')
+            c = '0' + (10 - (c - '0'));
+    }
+    display = sign * safe_to_int(s);
+}
+
+void Inv10::mutate_by(const MutatorOperation& op, bool unmutate) {}
+
+std::string Inv10::to_string() {
+    return "Inv10";
 }

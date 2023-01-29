@@ -32,6 +32,7 @@ void Solver::read_file(const std::string& level_file) {
         std::shared_ptr<Operation> to_add;
 
         size_t find_replace = line.find("=>");
+        size_t find_portal = line.find(',');
 
         if (line == "+/-" || line == "pm")
             to_add = std::make_shared<PlusMinus>();
@@ -50,7 +51,10 @@ void Solver::read_file(const std::string& level_file) {
         else if (find_replace != std::string::npos)
             to_add = std::make_shared<Replace>(std::stoi(line.substr(0, find_replace)),
                                                line.substr(find_replace + 2));
-        else if (is_int(line))
+        else if (find_portal != std::string::npos) {
+            portal_in = std::stoi(line.substr(0, find_portal)) - 1;
+            portal_out = std::stoi(line.substr( find_portal + 1)) - 1;
+        } else if (is_int(line))
             to_add = std::make_shared<Insert>(std::stoi(line));
         else if (line == "Reverse" || line == "rev")
             to_add = std::make_shared<Reverse>();
@@ -58,7 +62,8 @@ void Solver::read_file(const std::string& level_file) {
             to_add = std::make_shared<Sum>();
         else if (line == "Cube" || line == "cube" || line == "x^3")
             to_add = std::make_shared<Cube>();
-        else if ((line.starts_with("Shift") || line.starts_with('s')) && ((line.ends_with('<') || line.ends_with('>'))))
+        else if ((line.starts_with("Shift") || line.starts_with('s')) &&
+                 ((line.ends_with('<') || line.ends_with('>'))))
             to_add = std::make_shared<Shift>(line.back() == '<');
         else if (line == "Mirror" || line == "mirror" || line == "mir")
             to_add = std::make_shared<Mirror>();
@@ -66,10 +71,26 @@ void Solver::read_file(const std::string& level_file) {
             std::shared_ptr<Memory> memory = std::make_shared<Memory>();
             buttons.push_back(std::make_shared<Store>(memory));
             to_add = memory;
-        } else
-            throw std::invalid_argument("unrecognizable op " + line);
+        } else if (line == "Inv10" || line == "inv10" || line == "inv")
+            to_add = std::make_shared<Inv10>();
+        else
+            std::cout << "unrecognizable op " << line << ", ignoring" << std::endl;
 
-        buttons.push_back(to_add);
+        if (to_add)
+            buttons.push_back(to_add);
+    }
+
+    if (portal_in >= 0 && portal_out >= 0) {
+        int p_in = portal_in;
+        int p_out = portal_out;
+        portal_in_mul = 1;
+        portal_out_mul = 1;
+        while (p_in--) {
+            portal_in_mul *= 10;
+        }
+        while (p_out--) {
+            portal_out_mul *= 10;
+        }
     }
 
     file.close();

@@ -14,7 +14,7 @@
 // common to all operations
 #define OPERATION_METHODS                                           \
 public:                                                             \
-bool action(int& display) override;                                 \
+void action(int& display) override;                                 \
 void mutate_by(const MutatorOperation& op, bool unmutate) override; \
 private:                                                            \
 std::string to_string() override;
@@ -22,7 +22,7 @@ std::string to_string() override;
 // common to all mutators
 #define MUTATOR_OPERATION_METHODS                                      \
 public:                                                                \
-bool action(int& display) override { return true; };                   \
+void action(int& display) override {};                                 \
 void mutate_by(const MutatorOperation& op, bool unmutate) override {}; \
 void mutate(int& val, bool unmutate) const override;                   \
 private:                                                               \
@@ -33,7 +33,7 @@ class MutatorOperation;
 class Operation {
 public:
     // adjusts display and returns whether buttons should be added
-    virtual bool action(int& display) = 0;
+    virtual void action(int& display) = 0;
 
     virtual void mutate_by(const MutatorOperation& op, bool unmutate) = 0;
 
@@ -216,6 +216,13 @@ class Store : public Operation {
 public:
     explicit Store(std::shared_ptr<Memory> memory);
     std::shared_ptr<Memory> memory;
+
+OPERATION_METHODS
+};
+
+class Inv10 : public Operation {
+public:
+    Inv10();
 
 OPERATION_METHODS
 };
