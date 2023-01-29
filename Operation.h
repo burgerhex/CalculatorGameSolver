@@ -142,12 +142,13 @@ private:
 
 class Replace : public Operation {
 public:
-    Replace(int val1, int val2);
+    Replace(int val1, const std::string& val2);
 
 OPERATION_METHODS
 
 private:
-    int toReplace, replaceWith;
+    int toReplace;
+    std::string replaceWith;
 };
 
 class Reverse : public Operation {

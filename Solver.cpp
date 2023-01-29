@@ -49,7 +49,7 @@ void Solver::read_file(const std::string& level_file) {
             to_add = std::make_shared<Delete>();
         else if (find_replace != std::string::npos)
             to_add = std::make_shared<Replace>(std::stoi(line.substr(0, find_replace)),
-                                               std::stoi(line.substr(find_replace + 2)));
+                                               line.substr(find_replace + 2));
         else if (is_int(line))
             to_add = std::make_shared<Insert>(std::stoi(line));
         else if (line == "Reverse" || line == "rev")

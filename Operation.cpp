@@ -137,16 +137,15 @@ std::string Insert::to_string() {
     return std::to_string(insVal);
 }
 
-Replace::Replace(int val1, int val2) : toReplace(val1), replaceWith(val2) {}
+Replace::Replace(int val1, const std::string& val2) : toReplace(val1), replaceWith(val2) {}
 
 bool Replace::action(int& display) {
     const std::string& target = std::to_string(toReplace);
-    const std::string& replacement = std::to_string(replaceWith);
     std::string display_str = std::to_string(display);
 
     size_t ind = display_str.find(target);
     while (ind != std::string::npos) {
-        display_str.replace(ind, target.size(), replacement);
+        display_str.replace(ind, target.size(), replaceWith);
         ind = display_str.find(target, ind + target.size());
     }
 
@@ -156,12 +155,13 @@ bool Replace::action(int& display) {
 }
 
 void Replace::mutate_by(const MutatorOperation& op, bool unmutate) {
-    op.mutate(toReplace, unmutate);
-    op.mutate(replaceWith, unmutate);
+    // removed for now, probably never used
+//    op.mutate(toReplace, unmutate);
+//    op.mutate(replaceWith, unmutate);
 }
 
 std::string Replace::to_string() {
-    return std::to_string(toReplace) + " => " + std::to_string(replaceWith);
+    return std::to_string(toReplace) + " => " + replaceWith;
 }
 
 Reverse::Reverse() {}
