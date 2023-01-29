@@ -6,6 +6,8 @@
 #define CALCULATORGAMESOLVER_OPERATION_H
 
 #include <string>
+#include <memory>
+#include <vector>
 
 #define DEBUG 0
 
@@ -41,11 +43,19 @@ public:
 
     bool is_mutator() { return _is_mutator; }
 
+    bool is_memory() { return _is_memory; }
+
+    bool is_store() { return _is_store; }
+
 protected:
     bool _is_mutator = false;
+    bool _is_memory = false;
+    bool _is_store = false;
 
-    Operation() : Operation(false) {};
-    explicit Operation(bool is_mutator) : _is_mutator(is_mutator) {};
+    Operation() : Operation(false, false, false) {};
+
+    Operation(bool is_mutator, bool is_memory, bool is_store) : _is_mutator(is_mutator), _is_memory(is_memory),
+                                                                _is_store(is_store) {};
 
     static int safe_to_int(const std::string& str);
 };
@@ -60,7 +70,7 @@ public:
     virtual std::string to_string();
 
 protected:
-    MutatorOperation() : Operation(true) {};
+    MutatorOperation() : Operation(true, false, false) {};
 };
 
 class Add : public Operation {
@@ -181,6 +191,30 @@ private:
 class Mirror : public Operation {
 public:
     Mirror();
+
+OPERATION_METHODS
+};
+
+class Memory : public Operation {
+public:
+    Memory();
+
+    int get_memory();
+
+    void set_memory(int memory);
+
+    void pop_memory();
+
+OPERATION_METHODS
+
+private:
+    std::vector<int> past_memories;
+};
+
+class Store : public Operation {
+public:
+    explicit Store(std::shared_ptr<Memory> memory);
+    std::shared_ptr<Memory> memory;
 
 OPERATION_METHODS
 };

@@ -28,29 +28,24 @@ void Solver::read_file(const std::string& level_file) {
     std::getline(file, line);
     goal = std::stoi(line);
 
-
     while (std::getline(file, line)) {
         std::shared_ptr<Operation> to_add;
 
         size_t find_replace = line.find("=>");
 
-        if (line == "+/-")
+        if (line == "+/-" || line == "pm")
             to_add = std::make_shared<PlusMinus>();
         else if (line.starts_with('+'))
             to_add = std::make_shared<Add>(std::stoi(line.substr(1)));
         else if (line.starts_with('-'))
             to_add = std::make_shared<Subtract>(std::stoi(line.substr(1)));
-        else if (line.starts_with('*'))
+        else if (line.starts_with('*') || line.starts_with('x'))
             to_add = std::make_shared<Multiply>(std::stoi(line.substr(1)));
         else if (line.starts_with('/'))
             to_add = std::make_shared<Divide>(std::stoi(line.substr(1)));
         else if (line.starts_with("[+]"))
             to_add = std::make_shared<MutatorAdd>(std::stoi(line.substr(3)));
-//        else if (line.starts_with("[-]"))
-//            to_add = std::make_shared<MutatorSubtract>(std::stoi(line.substr(3)));
-//        else if (line.starts_with("[*]"))
-//            to_add = std::make_shared<MutatorMultiply>(std::stoi(line.substr(3)));
-        else if (line.starts_with("<<"))
+        else if (line == "<<" || line == "del")
             to_add = std::make_shared<Delete>();
         else if (find_replace != std::string::npos)
             to_add = std::make_shared<Replace>(std::stoi(line.substr(0, find_replace)),
@@ -64,12 +59,18 @@ void Solver::read_file(const std::string& level_file) {
         else if (line == "Cube" || line == "cube" || line == "x^3")
             to_add = std::make_shared<Cube>();
         else if ((line.starts_with("Shift") || line.starts_with('s')) && ((line.ends_with('<') || line.ends_with('>'))))
-            to_add = std::make_shared<Shift>(line[line.size() - 1] == '<');
+            to_add = std::make_shared<Shift>(line.back() == '<');
         else if (line == "Mirror" || line == "mirror" || line == "mir")
             to_add = std::make_shared<Mirror>();
-        else
+        else if (line == "Store" || line == "store" || line == "memory" || line == "mem") {
+            std::shared_ptr<Memory> memory = std::make_shared<Memory>();
+            buttons.push_back(std::make_shared<Store>(memory));
+            to_add = memory;
+        } else
             throw std::invalid_argument("unrecognizable op " + line);
 
         buttons.push_back(to_add);
     }
+
+    file.close();
 }

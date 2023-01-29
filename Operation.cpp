@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <utility>
 #include "Operation.h"
 
 Operation::~Operation() = default;
@@ -250,7 +251,7 @@ bool Shift::action(int& display) {
         char c = s[0];
         s = s.substr(1) + c;
     } else {
-        char c = s[s.size() - 1];
+        char c = s.back();
         s = c + s.substr(0, s.size() - 1);
     }
     display = sign * safe_to_int(s);
@@ -262,7 +263,7 @@ void Shift::mutate_by(const MutatorOperation& op, bool unmutate) {}
 
 std::string Shift::to_string() {
     std::string s = "Shift ";
-    return s + (is_left? "<" : ">");
+    return s + (is_left ? "<" : ">");
 }
 
 Mirror::Mirror() {}
@@ -285,4 +286,57 @@ void Mirror::mutate_by(const MutatorOperation& op, bool unmutate) {}
 
 std::string Mirror::to_string() {
     return "Mirror";
+}
+
+Memory::Memory() : Operation(false, true, false) {}
+
+int Memory::get_memory() {
+    if (past_memories.empty()) {
+        return INT_MAX;
+    } else {
+        return past_memories.back();
+    }
+}
+
+void Memory::set_memory(int memory) {
+    past_memories.push_back(memory);
+}
+
+void Memory::pop_memory() {
+    past_memories.pop_back();
+}
+
+bool Memory::action(int& display) {
+    if (get_memory() == INT_MAX)
+        display = INT_MAX;
+    else
+        // same as insert
+        display = safe_to_int(std::to_string(display) + std::to_string(get_memory()));
+    return true;
+}
+
+void Memory::mutate_by(const MutatorOperation& op, bool unmutate) {
+    // removed for now, probably never used
+//    op.mutate(get_memory(), unmutate);
+}
+
+std::string Memory::to_string() {
+    return std::to_string(get_memory()) + " (recall)";
+}
+
+Store::Store(std::shared_ptr<Memory> memory) : Operation(false, false, true),
+                                               memory(std::move(memory)) {}
+
+bool Store::action(int& display) {
+    memory->set_memory(display);
+    return true;
+}
+
+void Store::mutate_by(const MutatorOperation& op, bool unmutate) {
+    // removed for now, probably never used
+//    op.mutate(memory->get_memory(), unmutate);
+}
+
+std::string Store::to_string() {
+    return "Store";
 }

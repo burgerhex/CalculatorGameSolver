@@ -8,30 +8,19 @@
 
 #include <string>
 #include <numeric>
-#include <vector>
-#include <memory>
 #include <iostream>
 #include "Operation.h"
 
 #define MAX_DISPLAY 999999
 
 class Solver {
-private:
+public:
     std::vector<std::shared_ptr<Operation>> buttons;
     int start, goal, moves;
 
-public:
     explicit Solver(const std::string& level_file) : start(0), goal(0), moves(0) {
         read_file(level_file);
     }
-
-    int get_start() { return start; }
-
-    int get_goal() { return goal; }
-
-    int get_moves() { return moves; }
-
-    std::vector<std::shared_ptr<Operation>> get_buttons() { return buttons; }
 
     std::vector<int> get_solution() {
         std::vector<int> buttons_pushed;
@@ -43,18 +32,24 @@ public:
     static void solve(const std::string& file_name, bool try_getting_smallest = true) {
         Solver s(file_name);
 
-        int start = s.get_start();
-        int goal = s.get_goal();
-        int moves = s.get_moves();
-        std::vector<std::shared_ptr<Operation>> buttons = s.get_buttons();
+        int start = s.start;
+        int goal = s.goal;
+        int moves = s.moves;
+        const std::vector<std::shared_ptr<Operation>>& buttons = s.buttons;
+        std::vector<std::shared_ptr<Operation>> buttons_to_show;
+
+        for (const std::shared_ptr<Operation>& button : buttons) {
+            if (!button->is_memory())
+                buttons_to_show.push_back(button);
+        }
 
         std::cout << "Start: " << start << "\nGoal: " << goal << "\nMoves: " << moves << "\nButtons: ";
 
-        for (int i = 0; i < buttons.size() - 1; i++) {
-            std::cout << buttons[i]->to_string() << ", ";
+        for (int i = 0; i < buttons_to_show.size() - 1; i++) {
+            std::cout << buttons_to_show[i]->to_string() << ", ";
         }
 
-        std::cout << buttons[buttons.size() - 1]->to_string()
+        std::cout << buttons_to_show.back()->to_string()
                   << "\nAttempting to find solution..." << std::endl;
 
         if (try_getting_smallest) {
@@ -120,12 +115,6 @@ private:
 #endif
         if (button_to_push >= 0) {
             std::shared_ptr<Operation> o = buttons[button_to_push];
-            // TODO: apply mutators - give buttons is_mutator. then here (and in print solution,
-            //  go thru buttons_pushed, and if is_mutator, then static_cast to a Mutator parent
-            //  and apply the mutate method on a copy of the button (if can't copy, have mutators
-            //  be able to unmutate)
-            //  OR have another iterating reference vector mutators_pushed and only pop if we
-            //  pushed a mutator
             for (const std::shared_ptr<MutatorOperation>& m : mutators_to_apply) {
                 o->mutate_by(*m, false);
             }
@@ -158,18 +147,24 @@ private:
 
         for (int i = 0; i < buttons.size(); i++) {
             buttons_pushed.push_back(i);
-            std::shared_ptr<MutatorOperation> m;
+            std::shared_ptr<MutatorOperation> mut;
+            std::shared_ptr<Store> mem_store;
             if (buttons[i]->is_mutator()) {
-                m = static_pointer_cast<MutatorOperation>(buttons[i]);
-                mutators_to_apply.push_back(m);
+                mut = static_pointer_cast<MutatorOperation>(buttons[i]);
+                mutators_to_apply.push_back(mut);
+            } else if (buttons[i]->is_store()) {
+                mem_store = std::static_pointer_cast<Store>(buttons[i]);
             }
             bool result = solve_helper(buttons_pushed, display, moves_left, i, mutators_to_apply);
             if (result) {
                 return true;
             }
             buttons_pushed.pop_back();
-            if (m) {
+            if (mut) {
                 mutators_to_apply.pop_back();
+            }
+            if (mem_store) {
+                mem_store->memory->pop_memory();
             }
         }
 
@@ -193,7 +188,7 @@ private:
             result += buttons[indices[i]]->to_string() + ", ";
         }
 
-        return result + buttons[indices[indices.size() - 1]]->to_string() + "}";
+        return result + buttons[indices.back()]->to_string() + "}";
     }
 #endif
 };
